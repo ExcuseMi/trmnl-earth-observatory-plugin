@@ -1,0 +1,122 @@
+{% template main %}
+{% liquid
+  assign desc_length = image.description | size
+
+  if v_compact or h_compact
+    if desc_length < 120
+      assign richtext_class = "richtext--xlarge"
+      assign lg_content_class = "lg:content--xxlarge"
+    elsif desc_length < 250
+      assign richtext_class = "richtext--large"
+      assign lg_content_class = "lg:content--xlarge"
+    else
+      assign richtext_class = "richtext"
+      assign lg_content_class = "lg:content--large"
+    endif
+  else
+    if desc_length < 120
+      assign richtext_class = "richtext--xxlarge"
+      assign lg_content_class = "lg:content--xxxlarge"
+    elsif desc_length < 250
+      assign richtext_class = "richtext--xlarge"
+      assign lg_content_class = "lg:content--xxlarge"
+    else
+      assign richtext_class = "richtext--large"
+      assign lg_content_class = "lg:content--xlarge"
+    endif
+  endif
+%}
+<style>
+  .eo-image {
+    display: block;
+    max-width: 100%;
+  }
+  .eo-full-img {
+    max-height: calc(var(--full-h) * 0.70);
+  }
+  .qr-code {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 100;
+    background-color: white;
+    padding: 5px;
+    border: solid 1px black;
+    box-sizing: content-box;
+  }
+</style>
+<div class="layout layout--stretch">
+  {% if v_compact and h_compact %}
+    <div class="flex flex--center flex--grow">
+
+    <img src="{{ image.image_url }}" class="image eo-image image--contain image-dither" alt="{{ image.title | escape }}" />
+    </div>
+  {% else %}
+  <div class="flex flex--{% if v_compact %}row{% else %}col{% endif %} flex--center">
+    {% if image.image_url %}
+    {% if v_compact %}
+    <div class="flex flex--center w--min-64 md:w--min-64 lg:w--min-84">
+      <img src="{{ image.image_url }}" class="image eo-image outline image--contain image-dither rounded w--min-48 md:w--min-48 lg:w--min-52 h--max-52 lg:h--max-96" alt="{{ image.title | escape }}" />
+    </div>
+    {% elsif h_compact %}
+    <div class="flex flex--center">
+      <img src="{{ image.image_url }}" class="image eo-image eo-full-img outline image--contain image-dither rounded" alt="{{ image.title | escape }}" />
+    </div>
+    {% else %}
+    <div class="flex flex--center">
+      <img src="{{ image.image_url }}" class="image eo-image eo-full-img outline image--contain image-dither rounded" alt="{{ image.title | escape }}" />
+    </div>
+    {% endif %}
+    {% endif %}
+    <div class="flex flex--grow">
+      <div class="richtext {{ richtext_class }} richtext--left">
+        <div class="content {{ lg_content_class }}">
+          {{ image.description | escape }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% if trmnl.plugin_settings.custom_fields_values.show_qr_code == "true" %}
+  {% unless v_compact or h_compact %}
+  {{ image.link | qr_code: 2, 'm' }}
+  {% endunless %}
+  {% endif %}
+</div>
+<div class="title_bar">
+  <svg class="image w--8" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="256" cy="256" r="256" fill="black"></circle>
+    <text x="256" y="260" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="300" font-family="Arial, Helvetica, sans-serif">
+      N
+    </text>
+  </svg>
+  <span class="title">{{ image.title }}</span>
+  {% unless v_compact %}
+  {% if image.author or image.pub_date %}
+  <span class="instance">
+    {% assign has_prev = false %}
+    {% if image.author %}
+      {{ image.author }}
+      {% assign has_prev = true %}
+    {% endif %}
+    {% unless h_compact %}
+      {% if image.pub_date %}
+        {% if has_prev %} • {% endif %}
+        <span class="pub-date" data-pub-date="{{ image.pub_date }}">{{ image.pub_date }}</span>
+      {% endif %}
+    {% endunless %}
+  </span>
+  {% endif %}
+  {% endunless %}
+</div>
+<script>
+  document.querySelectorAll('.pub-date').forEach(el => {
+    const raw = el.dataset.pubDate;
+    if (!raw) return;
+    try {
+      const d = new Date(raw);
+      el.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {}
+  });
+</script>
+{% endtemplate %}

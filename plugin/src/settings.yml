@@ -1,0 +1,33 @@
+---
+strategy: polling
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+polling_verb: get
+framework_version: 3.0.3
+serverless_language: 
+polling_url: "https://earthobservatory.nasa.gov/feeds/image-of-the-day.rss\r\n"
+polling_headers: ''
+polling_body: ''
+id: 280791
+custom_fields:
+- keyname: author_bio
+  field_type: author_bio
+  name: About This Plugin
+  description: Displays the NASA Earth Observatory Image of the Day — satellite and scientific imagery of Earth with title, description, and author.<br />Data is pulled directly from the official NASA Earth Observatory RSS feed.
+  category: nature,environment
+- keyname: mode
+  field_type: select
+  name: Image Selection
+  default: latest
+  options:
+  - Latest - Most recent image of the day: latest
+  - Random - Surprise me with a recent image: random
+- keyname: show_qr_code
+  field_type: boolean
+  name: Show QR Code
+  default: 'false'
+  optional: true
+  help_text: QR Code links to the full NASA article. Only shown on full view.
+name: Earth Observatory Image of the Day
+refresh_interval: 360
