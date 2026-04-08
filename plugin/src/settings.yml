@@ -5,7 +5,7 @@ dark_mode: 'no'
 static_data: ''
 polling_verb: get
 framework_version: 3.0.3
-serverless_language: 
+serverless_language: ''
 polling_url: "https://earthobservatory.nasa.gov/feeds/image-of-the-day.rss\r\n"
 polling_headers: ''
 polling_body: ''
@@ -16,6 +16,8 @@ custom_fields:
   name: About This Plugin
   description: Displays the NASA Earth Observatory Image of the Day — satellite and scientific imagery of Earth with title, description, and author.<br />Data is pulled directly from the official NASA Earth Observatory RSS feed.
   category: nature,environment
+  github_url: https://github.com/ExcuseMi/trmnl-earth-observatory-plugin
+  learn_more_url: https://science.nasa.gov/earth/earth-observatory/image-of-the-day/
 - keyname: mode
   field_type: select
   name: Image Selection
@@ -26,8 +28,8 @@ custom_fields:
 - keyname: show_qr_code
   field_type: boolean
   name: Show QR Code
+  help_text: QR Code links to the full NASA article. Only shown on full view.
   default: 'false'
   optional: true
-  help_text: QR Code links to the full NASA article. Only shown on full view.
 name: Earth Observatory Image of the Day
 refresh_interval: 360
