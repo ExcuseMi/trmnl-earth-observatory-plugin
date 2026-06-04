@@ -15,15 +15,32 @@ function cleanDescription(html) {
   return text || null;
 }
 
+function isVideoUrl(url) {
+  return /\.(mp4|webm|ogg|mov|avi|mkv|m4v)(\?|#|$)/i.test(url);
+}
+
 /**
  * Extract the first image src from HTML (content:encoded) and decode HTML entities.
  * TRMNL parses content:encoded into item.encoded (namespace prefix stripped).
  * NASA RSS uses &amp; inside src="" attributes, so decoding is required.
+ * Skips video URLs (e.g. .mp4 animations) that can't be displayed on e-ink.
  */
 function extractImageUrl(html) {
   if (!html) return null;
-  const match = html.match(/src="([^"]+)"/);
-  return match ? decodeEntities(match[1]) : null;
+  // Prefer src from <img> tags first
+  const imgRe = /<img[^>]+src="([^"]+)"/g;
+  let match;
+  while ((match = imgRe.exec(html)) !== null) {
+    const url = decodeEntities(match[1]);
+    if (!isVideoUrl(url)) return url;
+  }
+  // Fallback: any src attribute that isn't a video
+  const srcRe = /src="([^"]+)"/g;
+  while ((match = srcRe.exec(html)) !== null) {
+    const url = decodeEntities(match[1]);
+    if (!isVideoUrl(url)) return url;
+  }
+  return null;
 }
 
 /**
