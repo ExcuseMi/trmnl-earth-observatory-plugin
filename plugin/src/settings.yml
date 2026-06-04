@@ -5,7 +5,7 @@ dark_mode: 'no'
 static_data: ''
 polling_verb: get
 framework_version: 3.0.3
-serverless_language: ''
+serverless_language: node
 polling_url: "https://earthobservatory.nasa.gov/feeds/image-of-the-day.rss\r\n"
 polling_headers: ''
 polling_body: ''
