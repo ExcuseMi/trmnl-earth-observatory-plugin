@@ -79,7 +79,7 @@
   {% endif %}
   {% if trmnl.plugin_settings.custom_fields_values.show_qr_code == "true" %}
   {% unless v_compact or h_compact %}
-  {{ image.link | qr_code: 2, 'm' }}
+  {{ image.link | qr_code: 2, 'm', 'fixed' }}
   {% endunless %}
   {% endif %}
 </div>
