@@ -1,4 +1,9 @@
 /**
+ * Source: NASA Science WordPress API, category 2151 (Earth Observatory), with the
+ * featured image embedded. The old RSS feed now redirects to a feed with malformed XML.
+ */
+
+/**
  * Strip HTML tags and collapse whitespace.
  */
 function stripHtml(html) {
@@ -6,68 +11,68 @@ function stripHtml(html) {
 }
 
 /**
- * Clean the RSS description: strip HTML and remove the "appeared first on" boilerplate.
+ * Decode common HTML entities (WordPress renders titles and excerpts with entities).
+ */
+function decodeEntities(text) {
+  if (!text) return text;
+  return text
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
+}
+
+/**
+ * Clean the excerpt: strip HTML and remove the "appeared first on" boilerplate.
  */
 function cleanDescription(html) {
   if (!html) return null;
-  let text = stripHtml(html);
+  let text = decodeEntities(stripHtml(html));
   text = text.replace(/\s*The post\s+.+?\s+appeared first on\s+.+?\.?\s*$/, '').trim();
   return text || null;
 }
 
 /**
- * Extract the first image src from HTML (content:encoded) and decode HTML entities.
- * TRMNL parses content:encoded into item.encoded (namespace prefix stripped).
- * NASA RSS uses &amp; inside src="" attributes, so decoding is required.
+ * Featured image URL, sized for e-ink. Skips videos and other non-image media.
  */
-function extractImageUrl(html) {
-  if (!html) return null;
-  const match = html.match(/src="([^"]+)"/);
-  return match ? decodeEntities(match[1]) : null;
+function imageUrl(media) {
+  if (!media?.source_url) return null;
+  if (media.mime_type && !media.mime_type.startsWith('image/')) return null;
+  return encodeURI(media.source_url) + '?w=1440&h=1260&fit=clip';
 }
 
 /**
- * Decode common HTML entities.
+ * Image credit "NASA Earth Observatory/Michala Garrison" -> "Michala Garrison".
  */
-function decodeEntities(text) {
-  if (!text) return text;
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+function author(media) {
+  const credit = media?.nasa_hds_core_meta_image_credit || media?.credits || '';
+  const name = credit.split('/').pop().trim();
+  return name || null;
 }
 
 function transform(input) {
-  const channel = input?.rss?.channel;
-  if (!channel) return { image: null };
-
-  const raw = channel.item || [];
-  const items = Array.isArray(raw) ? raw : [raw];
+  const posts = Array.isArray(input) ? input : (input?.data || []);
+  const items = posts
+    .map(p => ({ post: p, media: p?._embedded?.['wp:featuredmedia']?.[0] }))
+    .filter(i => imageUrl(i.media));
   if (items.length === 0) return { image: null };
 
   const mode = input?.trmnl?.plugin_settings?.custom_fields_values?.mode || 'latest';
-  const selectedItem = mode === 'random'
+  const { post, media } = mode === 'random'
     ? items[Date.now() % items.length]
-    : items[0]; // RSS is ordered newest-first
-
-  if (!selectedItem) return { image: null };
-
-  const categories = Array.isArray(selectedItem.category)
-    ? selectedItem.category
-    : [selectedItem.category].filter(Boolean);
+    : items[0]; // API is ordered newest-first
 
   return {
     image: {
-      title:       decodeEntities(selectedItem.title) || null,
-      link:        selectedItem.link || null,
-      pub_date:    selectedItem.pubDate || null,
-      author:      selectedItem.creator || null,       // dc:creator → creator
-      description: cleanDescription(selectedItem.description),
-      image_url:   extractImageUrl(selectedItem.encoded || ''), // content:encoded → encoded
-      categories,
+      title:       decodeEntities(post.title?.rendered) || null,
+      link:        post.link || null,
+      pub_date:    post.date_gmt ? new Date(post.date_gmt + 'Z').toUTCString() : null,
+      author:      author(media),
+      description: cleanDescription(post.excerpt?.rendered),
+      image_url:   imageUrl(media),
     }
   };
 }
