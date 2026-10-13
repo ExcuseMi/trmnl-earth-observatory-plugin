@@ -53,8 +53,19 @@ function author(media) {
   return name || null;
 }
 
+/**
+ * The list of posts, or null when the answer is not one: an error object from the API
+ * (its `data` is then an object such as { status: 429 }) or an error page as text.
+ */
+function postList(input) {
+  if (Array.isArray(input)) return input;
+  if (Array.isArray(input?.data)) return input.data;
+  return null;
+}
+
 function transform(input) {
-  const posts = Array.isArray(input) ? input : (input?.data || []);
+  const posts = postList(input);
+  if (!posts) return { image: null, notice: 'NASA did not send its image list. The next refresh tries again.' };
   const items = posts
     .map(p => ({ post: p, media: p?._embedded?.['wp:featuredmedia']?.[0] }))
     .filter(i => imageUrl(i.media));
